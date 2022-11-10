@@ -37,9 +37,21 @@ def create_todo(todo: ToDoRequest):
     # return the id
     return f"created todo item with id {id}"
 
+
 @app.get("/todo/{id}")
 def read_todo(id: int):
-    return "read todo item with id {id}"
+
+    # create a new database session
+    session = Session(bind=engine, expire_on_commit=False)
+
+    # get the todo item with the given id
+    todo = session.query(ToDo).get(id)
+
+    # close the session
+    session.close()
+
+    return f"todo item with id: {todo.id} and task: {todo.task}"
+
 
 @app.put("/todo/{id}")
 def update_todo(id: int):
