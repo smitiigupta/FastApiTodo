@@ -1,4 +1,4 @@
-from fastapi import FastAPI, status
+from fastapi import FastAPI, status, HTTPException
 from database import Base, engine, ToDo
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -50,7 +50,11 @@ def read_todo(id: int):
     # close the session
     session.close()
 
-    return f"todo item with id: {todo.id} and task: {todo.task}"
+    # check if todo item with given id exists. If not, raise exception and return 404 not found response
+    if not todo:
+        raise HTTPException(status_code=404, detail=f"todo item with id {id} not found")
+
+    return todo
 
 
 @app.put("/todo/{id}")
@@ -63,4 +67,13 @@ def delete_todo(id: int):
 
 @app.get("/todo")
 def read_todo_list():
-    return "read todo list"
+    # create a new database session
+    session = Session(bind=engine, expire_on_commit=False)
+
+    # get all todo items
+    todo_list = session.query(ToDo).all()
+
+    # close the session
+    session.close()
+
+    return todo_list
